@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HOS - HTML Operating System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --glass-bg: rgba(25, 25, 35, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-highlight: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Desktop Background - Modern Abstract Gradient */
+        #desktop-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism utility */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Window animations and styles */
+        .window {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            transform: scale(0.95);
+            opacity: 0;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease, width 0.2s, height 0.2s, top 0.2s, left 0.2s;
+        }
+        
+        .window.open {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .window-header {
+            cursor: grab;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .window-header:active {
+            cursor: grabbing;
+        }
+
+        .window-control {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+        }
+        
+        .window-control::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            bottom: -10px;
+            left: -10px;
+        }
+
+        .window-content {
+            flex-grow: 1;
+            overflow: auto;
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        /* Scrollbar styling for apps */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1); 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2); 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4); 
+        }
+
+        /* Boot Screen */
+        #boot-screen {
+            z-index: 9999;
+            transition: opacity 1s ease, visibility 1s ease;
+        }
+        
+        .typewriter-text {
+            font-family: 'Fira Code', monospace;
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: .15em solid white;
+            margin: 0 auto;
+            letter-spacing: .15em;
+            animation: typing 1.5s steps(40, end), blink-caret .75s step-end infinite;
+        }
+
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: white; }
+        }
+
+        /* Desktop Icon */
+        .desktop-icon {
+            transition: background 0.2s;
+        }
+        .desktop-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+        }
+
+        /* Start Menu */
+        #start-menu {
+            transform: translateY(120%);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-origin: bottom left;
+        }
+        #start-menu.show {
+            transform: translateY(0);
+        }
+
+        /* Custom Mad Shake Animation for Just Click Game */
+        @keyframes madShake {
+            0% { transform: translate(1px, 1px) rotate(0deg) scale(1.1); }
+            10% { transform: translate(-2px, -2px) rotate(-2deg) scale(1.1); }
+            20% { transform: translate(-3px, 0px) rotate(2deg) scale(1.1); }
+            30% { transform: translate(3px, 2px) rotate(0deg) scale(1.1); }
+            40% { transform: translate(1px, -1px) rotate(2deg) scale(1.1); }
+            50% { transform: translate(-1px, 2px) rotate(-2deg) scale(1.1); }
+            60% { transform: translate(-3px, 1px) rotate(0deg) scale(1.1); }
+            70% { transform: translate(3px, 1px) rotate(-2deg) scale(1.1); }
+            80% { transform: translate(-1px, -1px) rotate(2deg) scale(1.1); }
+            90% { transform: translate(1px, 2px) rotate(0deg) scale(1.1); }
+            100% { transform: translate(1px, -2px) rotate(-2deg) scale(1.1); }
+        }
+        .mad-shake {
+            animation: madShake 0.4s infinite;
+            background-color: #ef4444 !important; /* tailwind red-500 */
+            box-shadow: 0 0 30px #ef4444;
+        }
+    </style>
+</head>
+<body class="text-white">
+
+    <div id="boot-screen" class="fixed inset-0 bg-black flex flex-col items-center justify-center">
+        <i class="fa-solid fa-microchip text-6xl text-blue-500 mb-6 animate-pulse"></i>
+        <h1 class="text-4xl font-bold tracking-widest mb-2">HOS</h1>
+        <!-- Updated Version to 0.0.2 -->
+        <p class="text-gray-400 mb-8 font-mono text-sm">Beta 0.0.2</p>
+        <div class="w-64 h-1 bg-gray-800 rounded-full overflow-hidden">
+            <div id="boot-progress" class="h-full bg-blue-500 w-0 transition-all duration-[2000ms] ease-out"></div>
+        </div>
+        <p class="mt-4 text-xs font-mono text-green-400 typewriter-text inline-block">Initializing Web Kernel...</p>
+    </div>
+
+    <div id="desktop-bg" class="fixed inset-0 w-full h-full">
+        <!-- Desktop Grid -->
+        <div id="desktop-grid" class="p-4 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4 content-start h-[calc(100vh-3rem)]">
+            <!-- Icons injected via JS -->
+        </div>
+
+        <!-- Window Container -->
+        <div id="window-container" class="absolute inset-0 pointer-events-none w-full h-[calc(100vh-3rem)]">
+            <!-- Windows injected via JS -->
+        </div>
+
+        <!-- Start Menu -->
+        <div id="start-menu" class="glass absolute bottom-14 left-2 w-72 rounded-xl p-4 flex flex-col gap-2 z-50">
+            <div class="flex items-center gap-3 p-2 border-b border-gray-600 mb-2">
+                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-xl">U</div>
+                <div>
+                    <h3 class="font-semibold">Local User</h3>
+                    <!-- Updated Version to 0.0.2 -->
+                    <p class="text-xs text-gray-400">HOS Beta 0.0.2</p>
+                </div>
+            </div>
+            <div id="start-menu-apps" class="flex flex-col gap-1 max-h-64 overflow-y-auto pr-1">
+                <!-- Start menu items injected via JS -->
+            </div>
+            <div class="mt-2 pt-2 border-t border-gray-600 flex justify-between">
+                <button class="p-2 hover:bg-white/10 rounded-lg text-sm flex items-center gap-2 transition-colors w-full justify-center text-red-400" onclick="location.reload()">
+                    <i class="fa-solid fa-power-off"></i> Reboot HOS
+                </button>
+            </div>
+        </div>
+
+        <div class="glass fixed bottom-0 left-0 w-full h-12 flex items-center px-2 z-[60] justify-between">
+            <div class="flex items-center gap-1 h-full">
+                <!-- Start Button -->
+                <button id="start-btn" class="h-10 w-10 flex items-center justify-center hover:bg-white/10 rounded-lg transition-colors group">
+                    <i class="fa-brands fa-html5 text-2xl text-blue-400 group-hover:text-white transition-colors"></i>
+                </button>
+                
+                <div class="w-px h-6 bg-gray-600 mx-2"></div>
+                
+                <!-- Open Apps Taskbar Icons -->
+                <div id="taskbar-apps" class="flex items-center gap-1">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+
+            <!-- System Tray -->
+            <div class="flex items-center gap-3 px-3 hover:bg-white/10 h-10 rounded-lg transition-colors cursor-pointer">
+                <div class="flex gap-2 text-sm text-gray-300">
+                    <i class="fa-solid fa-wifi"></i>
+                    <i class="fa-solid fa-volume-high"></i>
+                    <i class="fa-solid fa-battery-full text-green-400"></i>
+                </div>
+                <div class="text-sm font-medium" id="clock">12:00 PM</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // HOS State
+        const state = {
+            apps: {},
+            openWindows: {},
+            activeWindowId: null,
+            zIndexCounter: 10,
+            isMobile: window.innerWidth < 768
+        };
+
+        // Load installed apps from storage
+        const savedApps = JSON.parse(localStorage.getItem('hos_installed_apps') || '[]');
+
+        // App Registry - Defines all available apps in the OS
+        const appRegistry = [
+            {
+                id: 'sysinfo',
+                name: 'System Info',
+                icon: 'fa-solid fa-circle-info',
+                color: 'text-blue-400',
+                width: 400,
+                height: 350,
+                isCore: true, // Cannot be uninstalled, always on desktop
+                content: `
+                    <div class="p-6 flex flex-col items-center justify-center h-full text-center">
+                        <i class="fa-brands fa-html5 text-6xl text-blue-500 mb-4"></i>
+                        <h2 class="text-2xl font-bold mb-1">HOS</h2>
+                        <p class="text-gray-400 mb-6">Version: Beta 0.0.2</p>
+                        
+                        <div class="bg-black/30 rounded-lg p-4 w-full text-left text-sm space-y-2">
+                            <p><span class="text-gray-400">Environment:</span> HTML5 / JS Browser Virtualization</p>
+                            <p><span class="text-gray-400">Device:</span> <span id="sys-device">Detecting...</span></p>
+                            <p><span class="text-gray-400">Resolution:</span> ${window.innerWidth}x${window.innerHeight}</p>
+                            <p><span class="text-gray-400">Storage Limit:</span> LocalStorage Quota</p>
+                        </div>
+                    </div>
+                `,
+                onInit: (winId) => {
+                    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+                    document.getElementById('sys-device').textContent = isTouch ? 'Mobile/Tablet (Touch)' : 'Desktop (Pointer)';
+                }
+            },
+            {
+                id: 'notes',
+                name: 'Notes',
+                icon: 'fa-regular fa-note-sticky',
+                color: 'text-yellow-400',
+                width: 500,
+                height: 400,
+                isCore: true,
+                content: `
+                    <div class="h-full flex flex-col bg-yellow-50/10">
+                        <div class="p-2 border-b border-gray-600 bg-black/20 flex gap-2">
+                            <button onclick="hos.apps.notes.save(this)" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 rounded text-xs transition-colors"><i class="fa-solid fa-save mr-1"></i>Save</button>
+                            <button onclick="hos.apps.notes.clear(this)" class="px-3 py-1 bg-red-600 hover:bg-red-500 rounded text-xs transition-colors"><i class="fa-solid fa-trash mr-1"></i>Clear</button>
+                            <span class="ml-auto text-xs text-green-400 self-center hidden save-msg">Saved!</span>
+                        </div>
+                        <textarea class="flex-grow w-full bg-transparent text-white p-4 resize-none outline-none font-sans" placeholder="Start typing... Data saves to local device storage."></textarea>
+                    </div>
+                `,
+                onInit: (winId) => {
+                    const win = document.getElementById(winId);
+                    const textarea = win.querySelector('textarea');
+                    textarea.value = localStorage.getItem('hos_notes') || '';
+                }
+            },
+            {
+                id: 'calculator',
+                name: 'Calculator',
+                icon: 'fa-solid fa-calculator',
+                color: 'text-green-400',
+                width: 300,
+                height: 420,
+                isCore: true,
+                content: `
+                    <div class="h-full flex flex-col p-4 bg-gray-900">
+                        <div class="bg-black rounded-lg p-4 mb-4 text-right text-3xl font-mono overflow-x-auto min-h-[4rem] flex items-center justify-end" id="calc-display">0</div>
+                        <div class="grid grid-cols-4 gap-2 flex-grow calc-buttons">
+                            <button class="bg-gray-700 hover:bg-gray-600 rounded text-lg font-semibold" onclick="hos.apps.calc.action('clear')">C</button>
+                            <button class="bg-gray-700 hover:bg-gray-600 rounded text-lg font-semibold" onclick="hos.apps.calc.action('del')">DEL</button>
+                            <button class="bg-gray-700 hover:bg-gray-600 rounded text-lg font-semibold text-blue-400" onclick="hos.apps.calc.append('%')">%</button>
+                            <button class="bg-gray-700 hover:bg-gray-600 rounded text-lg font-semibold text-blue-400" onclick="hos.apps.calc.append('/')">÷</button>
+                            
+                            <button class="bg-gray-800 hover:bg-gray-700 rounded text-lg font-semibold" onclick="hos.apps.calc.append('7')">7</button>
+                            <button class="bg-gray-800 hover:bg-gray-700 rounded text-lg font-semibold" onclick="hos.apps.calc.append('8')">8</button>
+                            <button class="bg-gray-800 hover:bg-gray-700 rounded text-lg font-semibold" onclick="hos.apps.calc.append('9')">9</button>
+                            <button class="bg-gray-700 hover:bg-gray-600 rounded text-lg font-semibold text-blue-400" onclick="hos.apps.calc.append('*')">×</button>
+                            
+                            <button class="bg-gray-800 hover:bg-gray-700 rounded text-lg font-semibold" onclick="hos.apps.calc.append('4')">4</button>
+                            <button class="bg-gray-800 hover:bg-gray-700 rounded text-lg font-semibold" onclick="hos.apps.calc.append('5')">5</button>
+                            <button class="bg-gray-800 hover:bg-gray-700 rounded text-lg font-semibold" onclick="hos.apps.calc.append('6')">6</button>
+                            <button class="bg-gray-700 hover:bg-gray-600 rounded text-lg font-semibold text-blue-400" onclick="hos.apps.calc.append('-')">−</button>
+                            
+                            <button class="bg-gray-800 hover:bg-gray-700 rounded text-lg font-semibold" onclick="hos.apps.calc.append('1')">1</button>
+                            <button class="bg-gray-800 hover:bg-gray-700 rounded text-lg font-semibold" onclick="hos.apps.calc.append('2')">2</button>
+                            <button class="bg-gray-800 hover:bg-gray-700 rounded text-lg font-semibold" onclick="hos.apps.calc.append('3')">3</button>
+                            <button class="bg-gray-700 hover:bg-gray-600 rounded text-lg font-semibold text-blue-400" onclick="hos.apps.calc.append('+')">+</button>
+                            
+                            <button class="bg-gray-800 hover:bg-gray-700 rounded text-lg font-semibold col-span-2" onclick="hos.apps.calc.append('0')">0</button>
+                            <button class="bg-gray-800 hover:bg-gray-700 rounded text-lg font-semibold" onclick="hos.apps.calc.append('.')">.</button>
+                            <button class="bg-blue-600 hover:bg-blue-500 rounded text-lg font-semibold" onclick="hos.apps.calc.calculate()">=</button>
+                        </div>
+                    </div>
+                `,
+                onInit: (winId) => {
+                    hos.apps.calc.currentWinId = winId;
+                }
+            },
+            {
+                id: 'terminal',
+                name: 'Terminal',
+                icon: 'fa-solid fa-terminal',
+                color: 'text-gray-300',
+                width: 600,
+                height: 400,
+                isCore: true,
+                content: `
+                    <div class="h-full bg-black/90 text-green-400 font-mono text-sm p-2 flex flex-col" onclick="document.getElementById('term-input').focus()">
+                        <div id="term-output" class="flex-grow overflow-y-auto whitespace-pre-wrap pb-2">HOS Web Kernel v0.0.2
+Type 'help' for available commands.
+</div>
+                        <div class="flex">
+                            <span class="mr-2 text-blue-400">user@hos:~$</span>
+                            <input type="text" id="term-input" class="flex-grow bg-transparent outline-none text-green-400 border-none p-0 m-0 shadow-none focus:ring-0" autocomplete="off" spellcheck="false" onkeydown="hos.apps.term.handleInput(event, this)">
+                        </div>
+                    </div>
+                `,
+                onInit: (winId) => {
+                    setTimeout(() => document.getElementById('term-input').focus(), 300);
+                }
+            },
+            {
+                id: 'hstore',
+                name: 'H Store',
+                icon: 'fa-solid fa-store',
+                color: 'text-purple-400',
+                width: 700,
+                height: 500,
+                isCore: true,
+                content: `
+                    <div class="h-full flex flex-col bg-gray-900">
+                        <div class="p-4 bg-purple-900/40 border-b border-purple-500/30 flex items-center gap-3">
+                            <i class="fa-solid fa-store text-2xl text-purple-400"></i>
+                            <div>
+                                <h2 class="text-xl font-bold">H Store</h2>
+                                <p class="text-xs text-purple-200">Discover new apps for HOS</p>
+                            </div>
+                        </div>
+                        <div class="flex-grow p-4 overflow-y-auto">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="store-app-list">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                `,
+                onInit: (winId) => {
+                    hos.apps.hstore.renderStore(winId);
+                }
+            },
+            {
+                id: 'justclick',
+                name: 'Just Click',
+                icon: 'fa-regular fa-hand-pointer',
+                color: 'text-blue-300',
+                description: 'A game where you click a blue circle... until it gets mad.',
+                width: 400,
+                height: 500,
+                isCore: false,
+                content: `
+                    <div class="h-full flex flex-col items-center justify-center bg-slate-900 p-4 select-none relative overflow-hidden">
+                        <div class="text-center mb-8 z-10">
+                            <h2 class="text-3xl font-bold mb-2">Just Click</h2>
+                            <p class="text-gray-400" id="jc-message">Click the circle to score points.</p>
+                            <p class="text-2xl font-mono mt-4">Score: <span id="jc-score" class="text-blue-400 font-bold">0</span></p>
+                        </div>
+                        
+                        <div class="flex-grow flex items-center justify-center z-10 w-full">
+                            <button id="jc-circle" onclick="hos.apps.justclick.click()" class="w-40 h-40 rounded-full bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.5)] transition-transform duration-100 transform active:scale-95 flex items-center justify-center text-white font-bold text-xl outline-none focus:outline-none">
+                                CLICK
+                            </button>
+                        </div>
+                    </div>
+                `,
+                onInit: (winId) => {
+                    hos.apps.justclick.init(winId);
+                }
+            },
+            {
+                id: 'utilitymgr',
+                name: 'Utility Manager',
+                icon: 'fa-solid fa-list-check',
+                color: 'text-orange-400',
+                description: 'Manage your tasks efficiently. Save and mark them off.',
+                width: 450,
+                height: 550,
+                isCore: false,
+                content: `
+                    <div class="h-full flex flex-col bg-gray-900">
+                        <div class="p-4 bg-orange-900/30 border-b border-orange-500/30 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-list-check text-orange-400 text-xl"></i>
+                                <h2 class="text-lg font-bold">Tasks</h2>
+                            </div>
+                        </div>
+                        <div class="p-3 border-b border-gray-700 flex gap-2">
+                            <input type="text" id="task-input" class="flex-grow bg-black/50 border border-gray-600 rounded px-3 py-2 text-sm outline-none focus:border-orange-500 transition-colors" placeholder="What needs to be done?" onkeydown="if(event.key === 'Enter') hos.apps.utilitymgr.addTask()">
+                            <button onclick="hos.apps.utilitymgr.addTask()" class="bg-orange-600 hover:bg-orange-500 px-4 py-2 rounded text-sm font-semibold transition-colors">Add</button>
+                        </div>
+                        <div class="flex-grow overflow-y-auto p-3" id="task-list">
+                            <!-- Tasks populated by JS -->
+                        </div>
+                    </div>
+                `,
+                onInit: (winId) => {
+                    hos.apps.utilitymgr.init(winId);
+                }
+            }
+        ];
+
+        window.hos = {
+            apps: {
+                notes: {
+                    save: (btn) => {
+                        const win = btn.closest('.window');
+                        const text = win.querySelector('textarea').value;
+                        localStorage.setItem('hos_notes', text);
+                        const msg = win.querySelector('.save-msg');
+                        msg.classList.remove('hidden');
+                        setTimeout(() => msg.classList.add('hidden'), 2000);
+                    },
+                    clear: (btn) => {
+                        const win = btn.closest('.window');
+                        win.querySelector('textarea').value = '';
+                        localStorage.removeItem('hos_notes');
+                    }
+                },
+                calc: {
+                    currentWinId: null,
+                    expression: '',
+                    append: (val) => {
+                        if(hos.apps.calc.expression === 'Error') hos.apps.calc.expression = '';
+                        hos.apps.calc.expression += val;
+                        hos.apps.calc.updateDisplay();
+                    },
+                    action: (act) => {
+                        if (act === 'clear') hos.apps.calc.expression = '';
+                        if (act === 'del') hos.apps.calc.expression = hos.apps.calc.expression.slice(0, -1);
+                        hos.apps.calc.updateDisplay();
+                    },
+                    calculate: () => {
+                        try {
+                            const sanitized = hos.apps.calc.expression.replace(/[^-()\d/*+.]/g, '');
+                            if (sanitized) {
+                                hos.apps.calc.expression = String(new Function('return ' + sanitized)());
+                            }
+                        } catch (e) {
+                            hos.apps.calc.expression = 'Error';
+                        }
+                        hos.apps.calc.updateDisplay();
+                    },
+                    updateDisplay: () => {
+                        const win = document.getElementById(hos.apps.calc.currentWinId);
+                        if (win) {
+                            const disp = win.querySelector('#calc-display');
+                            disp.textContent = hos.apps.calc.expression || '0';
+                        }
+                    }
+                },
+                term: {
+                    handleInput: (e, inputEl) => {
+                        if (e.key === 'Enter') {
+                            const cmd = inputEl.value.trim();
+                            const output = inputEl.closest('.window').querySelector('#term-output');
+                            
+                            output.innerHTML += `\n<span class="text-blue-400">user@hos:~$</span> ${cmd}\n`;
+                            
+                            if (cmd === 'help') {
+                                output.innerHTML += `Available commands:\n  help    - Show this message\n  clear   - Clear terminal\n  date    - Show current date/time\n  whoami  - Print effective user id\n  apps    - List available applications\n  echo    - Print text`;
+                            } else if (cmd === 'clear') {
+                                output.innerHTML = '';
+                            } else if (cmd === 'date') {
+                                output.innerHTML += new Date().toString();
+                            } else if (cmd === 'whoami') {
+                                output.innerHTML += 'local_user';
+                            } else if (cmd === 'apps') {
+                                output.innerHTML += appRegistry.map(a => a.id).join('  ');
+                            } else if (cmd.startsWith('echo ')) {
+                                output.innerHTML += cmd.substring(5);
+                            } else if (cmd !== '') {
+                                output.innerHTML += `Command not found: ${cmd}`;
+                            }
+                            
+                            inputEl.value = '';
+                            output.scrollTop = output.scrollHeight;
+                        }
+                    }
+                },
+                hstore: {
+                    renderStore: (winId) => {
+                        const win = document.getElementById(winId);
+                        const list = win.querySelector('#store-app-list');
+                        list.innerHTML = '';
+                        
+                        // Show apps that are not core
+                        appRegistry.filter(a => !a.isCore).forEach(app => {
+                            const isInstalled = savedApps.includes(app.id);
+                            
+                            list.innerHTML += `
+                                <div class="bg-black/40 border border-gray-700 rounded-lg p-4 flex flex-col gap-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-white/5 border border-white/10">
+                                            <i class="${app.icon} ${app.color} text-2xl"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold text-lg">${app.name}</h3>
+                                            <p class="text-xs text-gray-400">Utility / Game</p>
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-gray-300 flex-grow">${app.description}</p>
+                                    <button 
+                                        onclick="hos.apps.hstore.install('${app.id}', this)" 
+                                        class="w-full py-2 rounded-lg font-semibold text-sm transition-colors ${isInstalled ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-500 text-white'}"
+                                        ${isInstalled ? 'disabled' : ''}
+                                    >
+                                        ${isInstalled ? 'Installed' : 'Install'}
+                                    </button>
+                                </div>
+                            `;
+                        });
+                    },
+                    install: (appId, btn) => {
+                        if (!savedApps.includes(appId)) {
+                            savedApps.push(appId);
+                            localStorage.setItem('hos_installed_apps', JSON.stringify(savedApps));
+                            
+                            // Update Button
+                            btn.innerText = 'Installed';
+                            btn.disabled = true;
+                            btn.classList.remove('bg-purple-600', 'hover:bg-purple-500', 'text-white');
+                            btn.classList.add('bg-gray-600', 'text-gray-400', 'cursor-not-allowed');
+
+                            // Add to Desktop and Start Menu dynamically
+                            const app = appRegistry.find(a => a.id === appId);
+                            addAppToUI(app);
+                        }
+                    }
+                },
+                justclick: {
+                    currentWinId: null,
+                    score: 0,
+                    madThreshold: 25,
+                    init: (winId) => {
+                        hos.apps.justclick.currentWinId = winId;
+                        hos.apps.justclick.score = 0;
+                        hos.apps.justclick.updateUI();
+                    },
+                    click: () => {
+                        hos.apps.justclick.score++;
+                        hos.apps.justclick.updateUI();
+                    },
+                    updateUI: () => {
+                        const win = document.getElementById(hos.apps.justclick.currentWinId);
+                        if(!win) return;
+                        
+                        const scoreEl = win.querySelector('#jc-score');
+                        const circle = win.querySelector('#jc-circle');
+                        const msg = win.querySelector('#jc-message');
+                        
+                        scoreEl.textContent = hos.apps.justclick.score;
+                        
+                        if (hos.apps.justclick.score >= hos.apps.justclick.madThreshold) {
+                            if (!circle.classList.contains('mad-shake')) {
+                                circle.classList.remove('bg-blue-500', 'shadow-[0_0_20px_rgba(59,130,246,0.5)]');
+                                circle.classList.add('mad-shake');
+                                circle.innerText = "GRRR!";
+                                msg.textContent = "Okay, you made it mad. Keep going?!";
+                                msg.classList.replace('text-gray-400', 'text-red-400');
+                                scoreEl.classList.replace('text-blue-400', 'text-red-500');
+                            }
+                            
+                            // Make it jump around slightly when mad inside the flex container by adjusting margins randomly
+                            const offsetX = (Math.random() - 0.5) * 40;
+                            const offsetY = (Math.random() - 0.5) * 40;
+                            circle.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+                        } else {
+                            circle.innerText = "CLICK";
+                            circle.style.transform = "translate(0px, 0px)";
+                            circle.classList.remove('mad-shake');
+                            circle.classList.add('bg-blue-500', 'shadow-[0_0_20px_rgba(59,130,246,0.5)]');
+                            msg.textContent = "Click the circle to score points.";
+                            msg.classList.replace('text-red-400', 'text-gray-400');
+                            scoreEl.classList.replace('text-red-500', 'text-blue-400');
+                        }
+                    }
+                },
+                utilitymgr: {
+                    currentWinId: null,
+                    tasks: [],
+                    init: (winId) => {
+                        hos.apps.utilitymgr.currentWinId = winId;
+                        const saved = localStorage.getItem('hos_tasks');
+                        if (saved) {
+                            hos.apps.utilitymgr.tasks = JSON.parse(saved);
+                        } else {
+                            hos.apps.utilitymgr.tasks = [];
+                        }
+                        hos.apps.utilitymgr.renderList();
+                    },
+                    addTask: () => {
+                        const win = document.getElementById(hos.apps.utilitymgr.currentWinId);
+                        const input = win.querySelector('#task-input');
+                        const text = input.value.trim();
+                        if (text) {
+                            hos.apps.utilitymgr.tasks.push({ text: text, done: false });
+                            input.value = '';
+                            hos.apps.utilitymgr.save();
+                            hos.apps.utilitymgr.renderList();
+                        }
+                    },
+                    toggleTask: (index) => {
+                        hos.apps.utilitymgr.tasks[index].done = !hos.apps.utilitymgr.tasks[index].done;
+                        hos.apps.utilitymgr.save();
+                        hos.apps.utilitymgr.renderList();
+                    },
+                    deleteTask: (index) => {
+                        hos.apps.utilitymgr.tasks.splice(index, 1);
+                        hos.apps.utilitymgr.save();
+                        hos.apps.utilitymgr.renderList();
+                    },
+                    save: () => {
+                        localStorage.setItem('hos_tasks', JSON.stringify(hos.apps.utilitymgr.tasks));
+                    },
+                    renderList: () => {
+                        const win = document.getElementById(hos.apps.utilitymgr.currentWinId);
+                        if (!win) return;
+                        
+                        const list = win.querySelector('#task-list');
+                        list.innerHTML = '';
+                        
+                        if (hos.apps.utilitymgr.tasks.length === 0) {
+                            list.innerHTML = '<p class="text-gray-500 text-center mt-10 text-sm">No tasks yet. Add one above.</p>';
+                            return;
+                        }
+                        
+                        hos.apps.utilitymgr.tasks.forEach((t, i) => {
+                            list.innerHTML += `
+                                <div class="flex items-center justify-between p-3 border border-gray-700 bg-black/30 rounded-lg mb-2 shadow-sm transition-all hover:bg-black/50">
+                                    <div class="flex items-center gap-3 cursor-pointer w-full select-none" onclick="hos.apps.utilitymgr.toggleTask(${i})">
+                                        <div class="w-6 h-6 rounded border-2 border-gray-500 flex items-center justify-center transition-colors ${t.done ? 'bg-orange-500 border-orange-500' : ''}">
+                                            ${t.done ? '<i class="fa-solid fa-check text-white text-xs"></i>' : ''}
+                                        </div>
+                                        <span class="text-sm ${t.done ? 'line-through text-gray-500' : 'text-gray-200'}">${t.text}</span>
+                                    </div>
+                                    <button onclick="hos.apps.utilitymgr.deleteTask(${i})" class="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/30 rounded transition-colors focus:outline-none">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            `;
+                        });
+                    }
+                }
+            }
+        };
+
+        class WindowManager {
+            constructor() {
+                this.container = document.getElementById('window-container');
+                this.taskbar = document.getElementById('taskbar-apps');
+                this.bindEvents();
+            }
+
+            openApp(appId) {
+                const app = appRegistry.find(a => a.id === appId);
+                if (!app) return;
+
+                // Check if already open
+                const existingWinId = Object.keys(state.openWindows).find(id => state.openWindows[id].appId === appId);
+                if (existingWinId) {
+                    if(state.openWindows[existingWinId].minimized) {
+                        this.restoreWindow(existingWinId);
+                    } else {
+                        this.focusWindow(existingWinId);
+                    }
+                    return;
+                }
+
+                const winId = 'win-' + Math.random().toString(36).substr(2, 9);
+                
+                // Calculate position and size (Responsive)
+                let w = app.width;
+                let h = app.height;
+                let x = (window.innerWidth - w) / 2 + (Math.random() * 40 - 20);
+                let y = (window.innerHeight - h) / 2 + (Math.random() * 40 - 20);
+
+                if (state.isMobile) {
+                    w = window.innerWidth * 0.95;
+                    h = window.innerHeight * 0.8;
+                    x = (window.innerWidth - w) / 2;
+                    y = (window.innerHeight - h) / 2 - 20; // Offset for taskbar
+                }
+
+                // Create Window Element
+                const winEl = document.createElement('div');
+                winEl.id = winId;
+                winEl.className = 'window glass pointer-events-auto shadow-2xl';
+                winEl.style.width = `${w}px`;
+                winEl.style.height = `${h}px`;
+                winEl.style.left = `${x}px`;
+                winEl.style.top = `${y}px`;
+                winEl.style.zIndex = state.zIndexCounter++;
+
+                winEl.innerHTML = `
+                    <div class="window-header flex justify-between items-center px-3 py-2 select-none" id="header-${winId}">
+                        <div class="flex items-center gap-2 font-semibold text-sm">
+                            <i class="${app.icon} ${app.color}"></i>
+                            ${app.name}
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <div class="window-control bg-yellow-500 hover:bg-yellow-400" id="min-${winId}"></div>
+                            <div class="window-control bg-green-500 hover:bg-green-400 hidden sm:block" id="max-${winId}"></div>
+                            <div class="window-control bg-red-500 hover:bg-red-400" id="close-${winId}"></div>
+                        </div>
+                    </div>
+                    <div class="window-content relative">
+                        ${app.content}
+                    </div>
+                `;
+
+                this.container.appendChild(winEl);
+                
+                // Track state
+                state.openWindows[winId] = {
+                    appId: app.id,
+                    el: winEl,
+                    isMaximized: false,
+                    prevStyles: {},
+                    minimized: false
+                };
+
+                // Add to taskbar
+                this.addTaskbarIcon(winId, app);
+
+                // Initialize app specific logic
+                if (app.onInit) {
+                    setTimeout(() => app.onInit(winId), 0);
+                }
+
+                // Map window controls
+                const bindControl = (id, action) => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.addEventListener('click', (e) => { e.stopPropagation(); action(); });
+                        el.addEventListener('touchend', (e) => { e.preventDefault(); e.stopPropagation(); action(); }, {passive: false});
+                    }
+                };
+
+                bindControl(`min-${winId}`, () => this.minimizeWindow(winId));
+                bindControl(`max-${winId}`, () => this.maximizeWindow(winId));
+                bindControl(`close-${winId}`, () => this.closeWindow(winId));
+
+                // Make draggable
+                this.makeDraggable(winEl, document.getElementById(`header-${winId}`));
+                
+                // Focus handling
+                winEl.addEventListener('mousedown', () => this.focusWindow(winId));
+                winEl.addEventListener('touchstart', () => this.focusWindow(winId), {passive: true});
+
+                // Trigger entrance animation
+                setTimeout(() => {
+                    winEl.classList.add('open');
+                    this.focusWindow(winId);
+                }, 10);
+            }
+
+            closeWindow(winId) {
+                const win = state.openWindows[winId];
+                if (!win) return;
+                
+                win.el.classList.remove('open');
+                win.el.style.transform = 'scale(0.95)';
+                win.el.style.opacity = '0';
+                win.el.style.pointerEvents = 'none';
+                
+                // Remove taskbar icon
+                const tbIcon = document.getElementById(`tb-${winId}`);
+                if (tbIcon) tbIcon.remove();
+
+                setTimeout(() => {
+                    win.el.remove();
+                    delete state.openWindows[winId];
+                }, 200);
+            }
+
+            minimizeWindow(winId) {
+                const win = state.openWindows[winId];
+                if (!win) return;
+                
+                win.el.style.opacity = '0';
+                win.el.style.transform = 'translateY(100vh) scale(0.5)';
+                win.el.style.pointerEvents = 'none';
+                win.minimized = true;
+                
+                const tbIcon = document.getElementById(`tb-${winId}`);
+                if (tbIcon) tbIcon.classList.add('opacity-50');
+            }
+
+            restoreWindow(winId) {
+                const win = state.openWindows[winId];
+                if (!win) return;
+                
+                win.el.style.opacity = '1';
+                win.el.style.transform = win.isMaximized ? 'scale(1)' : 'scale(1)';
+                win.el.style.pointerEvents = 'auto';
+                win.minimized = false;
+                
+                const tbIcon = document.getElementById(`tb-${winId}`);
+                if (tbIcon) tbIcon.classList.remove('opacity-50');
+                
+                this.focusWindow(winId);
+            }
+
+            maximizeWindow(winId) {
+                if (state.isMobile) return; // Disable max on mobile
+                const win = state.openWindows[winId];
+                if (!win) return;
+
+                if (!win.isMaximized) {
+                    win.prevStyles = {
+                        width: win.el.style.width,
+                        height: win.el.style.height,
+                        left: win.el.style.left,
+                        top: win.el.style.top
+                    };
+                    win.el.style.width = '100%';
+                    win.el.style.height = '100%';
+                    win.el.style.left = '0';
+                    win.el.style.top = '0';
+                    win.el.style.borderRadius = '0';
+                    win.isMaximized = true;
+                } else {
+                    win.el.style.width = win.prevStyles.width;
+                    win.el.style.height = win.prevStyles.height;
+                    win.el.style.left = win.prevStyles.left;
+                    win.el.style.top = win.prevStyles.top;
+                    win.el.style.borderRadius = '0.75rem';
+                    win.isMaximized = false;
+                }
+            }
+
+            focusWindow(winId) {
+                const win = state.openWindows[winId];
+                if (!win) return;
+                state.zIndexCounter++;
+                win.el.style.zIndex = state.zIndexCounter;
+                
+                document.querySelectorAll('.tb-icon').forEach(el => el.classList.remove('bg-white/20', 'border-b-2', 'border-blue-400'));
+                const tbIcon = document.getElementById(`tb-${winId}`);
+                if (tbIcon) tbIcon.classList.add('bg-white/20', 'border-b-2', 'border-blue-400');
+            }
+
+            addTaskbarIcon(winId, app) {
+                const btn = document.createElement('button');
+                btn.id = `tb-${winId}`;
+                btn.className = 'tb-icon h-10 w-12 flex items-center justify-center hover:bg-white/10 rounded-lg transition-all border-b-2 border-transparent';
+                btn.innerHTML = `<i class="${app.icon} ${app.color} text-xl"></i>`;
+                
+                btn.onclick = () => {
+                    const win = state.openWindows[winId];
+                    if (win.minimized) {
+                        this.restoreWindow(winId);
+                    } else if (win.el.style.zIndex == state.zIndexCounter) {
+                        this.minimizeWindow(winId);
+                    } else {
+                        this.focusWindow(winId);
+                    }
+                };
+                this.taskbar.appendChild(btn);
+            }
+
+            makeDraggable(windowEl, headerEl) {
+                let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+                
+                const dragMouseDown = (e) => {
+                    if (e.target.tagName === 'BUTTON' || state.openWindows[windowEl.id].isMaximized) return;
+                    e.preventDefault();
+                    this.focusWindow(windowEl.id);
+                    
+                    if (e.type === 'touchstart') {
+                        pos3 = e.touches[0].clientX;
+                        pos4 = e.touches[0].clientY;
+                    } else {
+                        pos3 = e.clientX;
+                        pos4 = e.clientY;
+                    }
+                    
+                    document.onmouseup = closeDragElement;
+                    document.onmousemove = elementDrag;
+                    document.ontouchend = closeDragElement;
+                    document.ontouchmove = elementDrag;
+                };
+
+                const elementDrag = (e) => {
+                    e.preventDefault();
+                    let clientX, clientY;
+                    
+                    if (e.type === 'touchmove') {
+                        clientX = e.touches[0].clientX;
+                        clientY = e.touches[0].clientY;
+                    } else {
+                        clientX = e.clientX;
+                        clientY = e.clientY;
+                    }
+
+                    pos1 = pos3 - clientX;
+                    pos2 = pos4 - clientY;
+                    pos3 = clientX;
+                    pos4 = clientY;
+
+                    let newTop = windowEl.offsetTop - pos2;
+                    let newLeft = windowEl.offsetLeft - pos1;
+
+                    const headerHeight = headerEl.offsetHeight;
+                    if (newTop < 0) newTop = 0;
+                    if (newTop > window.innerHeight - headerHeight - 48) newTop = window.innerHeight - headerHeight - 48;
+
+                    windowEl.style.top = newTop + "px";
+                    windowEl.style.left = newLeft + "px";
+                };
+
+                const closeDragElement = () => {
+                    document.onmouseup = null;
+                    document.onmousemove = null;
+                    document.ontouchend = null;
+                    document.ontouchmove = null;
+                };
+
+                headerEl.onmousedown = dragMouseDown;
+                headerEl.ontouchstart = dragMouseDown;
+            }
+
+            bindEvents() {
+                window.addEventListener('resize', () => {
+                    state.isMobile = window.innerWidth < 768;
+                });
+            }
+        }
+
+        const wm = new WindowManager();
+
+        function addAppToUI(app) {
+            const grid = document.getElementById('desktop-grid');
+            const startMenuApps = document.getElementById('start-menu-apps');
+            
+            // Add to Desktop
+            const icon = document.createElement('div');
+            icon.className = 'desktop-icon flex flex-col items-center justify-center p-2 cursor-pointer gap-2 text-center group';
+            icon.innerHTML = `
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-white/5 border border-white/10 group-hover:bg-white/20 transition-all shadow-lg">
+                    <i class="${app.icon} ${app.color} text-2xl drop-shadow-md"></i>
+                </div>
+                <span class="text-xs font-medium text-gray-100 group-hover:text-white drop-shadow-md">${app.name}</span>
+            `;
+            icon.onclick = () => wm.openApp(app.id);
+            // Touch support for desktop icons
+            icon.addEventListener('touchend', (e) => { 
+                e.preventDefault(); 
+                wm.openApp(app.id); 
+            }, {passive: false});
+            grid.appendChild(icon);
+
+            // Add to Start Menu
+            const smItem = document.createElement('button');
+            smItem.className = 'flex items-center gap-3 p-2 hover:bg-white/10 rounded-lg text-left transition-colors w-full';
+            smItem.innerHTML = `
+                <div class="w-8 h-8 rounded bg-white/5 flex items-center justify-center">
+                    <i class="${app.icon} ${app.color}"></i>
+                </div>
+                <span class="text-sm font-medium">${app.name}</span>
+            `;
+            smItem.onclick = () => {
+                wm.openApp(app.id);
+                toggleStartMenu();
+            };
+            startMenuApps.appendChild(smItem);
+        }
+
+        function initDesktop() {
+            // Render Core Apps and Installed Apps
+            appRegistry.forEach(app => {
+                if (app.isCore || savedApps.includes(app.id)) {
+                    addAppToUI(app);
+                }
+            });
+        }
+
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            document.getElementById('clock').textContent = `${hours}:${minutes} ${ampm}`;
+        }
+
+        function toggleStartMenu() {
+            const menu = document.getElementById('start-menu');
+            menu.classList.toggle('show');
+        }
+
+        // Setup Start Menu trigger and outside click
+        document.getElementById('start-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleStartMenu();
+        });
+
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('start-menu');
+            const startBtn = document.getElementById('start-btn');
+            if (menu.classList.contains('show') && !menu.contains(e.target) && !startBtn.contains(e.target)) {
+                menu.classList.remove('show');
+            }
+        });
+
+        // Prevent context menu to feel more like an OS
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        window.onload = () => {
+            // Start clock
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            // Build UI
+            initDesktop();
+
+            // Simulate boot progress
+            const progress = document.getElementById('boot-progress');
+            setTimeout(() => {
+                progress.style.width = '100%';
+            }, 100);
+
+            // Hide boot screen after 2.5s
+            setTimeout(() => {
+                const bootScreen = document.getElementById('boot-screen');
+                bootScreen.style.opacity = '0';
+                setTimeout(() => {
+                    bootScreen.style.visibility = 'hidden';
+                    // Open SysInfo automatically on first boot
+                    setTimeout(() => wm.openApp('sysinfo'), 500);
+                }, 1000);
+            }, 2500);
+        };
+    </script>
+</body>
+</html>
